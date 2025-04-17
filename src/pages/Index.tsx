@@ -11,8 +11,8 @@ const Index = () => {
     if (user.isAuthenticated) {
       navigate("/dashboard");
     } else {
-      // Otherwise redirect to login
-      navigate("/login");
+      // Otherwise redirect to landing page
+      navigate("/");
     }
   }, [user.isAuthenticated, navigate]);
 
