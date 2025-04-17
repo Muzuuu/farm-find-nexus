@@ -13,6 +13,33 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { toast } = useToast();
 
   const handleAddToCart = () => {
+    // Get existing cart or create a new one
+    const existingCart = localStorage.getItem('cart');
+    const cart = existingCart ? JSON.parse(existingCart) : [];
+    
+    // Check if item already exists in cart
+    const existingItemIndex = cart.findIndex((item: any) => item.id === product.id);
+    
+    if (existingItemIndex >= 0) {
+      // Increment quantity if item already exists
+      cart[existingItemIndex].quantity += 1;
+    } else {
+      // Add new item with quantity 1
+      cart.push({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity: 1
+      });
+    }
+    
+    // Save updated cart to localStorage
+    localStorage.setItem('cart', JSON.stringify(cart));
+    
+    // Dispatch event to update cart counter
+    window.dispatchEvent(new Event('cartUpdated'));
+    
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart`,
@@ -20,10 +47,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   const handleBuyNow = () => {
-    toast({
-      title: "Proceed to checkout",
-      description: `Buying ${product.name}`,
-    });
+    // Add to cart first
+    handleAddToCart();
+    
+    // Redirect to cart page
+    window.location.href = "/cart";
   };
 
   return (
