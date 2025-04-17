@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Leaf, Handshake, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import LandingNav from '@/components/LandingNav';
 
 const LandingPage = () => {
   const scrollToSection = (id: string) => {
@@ -14,6 +15,8 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <LandingNav />
+      
       {/* Hero Section */}
       <section className="relative h-screen flex items-center">
         <div 

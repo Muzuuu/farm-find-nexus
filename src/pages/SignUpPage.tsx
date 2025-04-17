@@ -1,17 +1,18 @@
 
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useUser, UserRole } from '@/contexts/UserContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { UserRole } from '@/contexts/UserContext';
 
-const LoginPage: React.FC = () => {
+const SignUpPage: React.FC = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('owner');
-  const { updateUser } = useUser();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -19,33 +20,42 @@ const LoginPage: React.FC = () => {
     setSelectedRole(role);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Here you would typically authenticate with a server
-    if (email && password) {
-      // Mock successful login
-      updateUser({
-        id: '1',
-        name: 'User',
-        email,
-        role: selectedRole,
-        isAuthenticated: true,
-      });
-      
+    if (!name || !email || !password || !confirmPassword) {
       toast({
-        title: "Login successful",
-        description: `Welcome back! You are logged in as a ${selectedRole}.`,
-      });
-      
-      navigate('/dashboard');
-    } else {
-      toast({
-        title: "Login failed",
-        description: "Please enter both email and password.",
+        title: "Sign up failed",
+        description: "Please fill in all fields.",
         variant: "destructive",
       });
+      return;
     }
+    
+    if (password !== confirmPassword) {
+      toast({
+        title: "Sign up failed",
+        description: "Passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // In a real app, we would send this data to a server
+    // For now, we'll just store it in localStorage
+    localStorage.setItem('userSignupData', JSON.stringify({
+      name,
+      email,
+      role: selectedRole
+    }));
+    
+    toast({
+      title: "Sign up successful",
+      description: "Your account has been created. Please log in.",
+    });
+    
+    // Navigate to login page
+    navigate('/login');
   };
 
   return (
@@ -53,7 +63,7 @@ const LoginPage: React.FC = () => {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-md">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-farm-green-600">FarmFindNexus</h1>
-          <p className="mt-2 text-gray-600">Sign in to connect with farmers and landowners</p>
+          <p className="mt-2 text-gray-600">Create an account to get started</p>
         </div>
         
         <div className="mt-6">
@@ -80,7 +90,21 @@ const LoginPage: React.FC = () => {
             </button>
           </div>
           
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSignUp} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your full name"
+                className="mt-1"
+              />
+            </div>
+            
             <div>
               <Label htmlFor="email">Email address</Label>
               <Input
@@ -102,11 +126,24 @@ const LoginPage: React.FC = () => {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your password"
+                placeholder="Create a password"
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password"
                 className="mt-1"
               />
             </div>
@@ -116,23 +153,15 @@ const LoginPage: React.FC = () => {
                 type="submit"
                 className="w-full bg-farm-green-600 hover:bg-farm-green-700 text-white"
               >
-                Sign in
+                Sign Up
               </Button>
             </div>
           </form>
           
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account? <Link to="/signup" className="text-farm-green-600 hover:underline">Sign up</Link>
+              Already have an account? <a href="/login" className="text-farm-green-600 hover:underline">Login</a>
             </p>
-          </div>
-          
-          <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-            <div className="flex justify-center space-x-4">
-              <Button variant="outline" className="w-full border-gray-300 text-gray-700">
-                Sign in with Google
-              </Button>
-            </div>
           </div>
         </div>
       </div>
@@ -140,4 +169,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default SignUpPage;

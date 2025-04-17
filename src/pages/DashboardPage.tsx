@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Menu } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,15 +9,25 @@ import Navbar from '@/components/Navbar';
 import LandCard from '@/components/LandCard';
 import FarmerCard from '@/components/FarmerCard';
 import { mockLands, mockFarmers } from '@/data/mockData';
-
-type FilterType = 'all' | 'fertilizer' | 'seed' | 'equipments';
+import { storeItems, StoreItem } from '@/data/storeItems';
+import StoreSidebar from '@/components/StoreSidebar';
+import ProductCard from '@/components/ProductCard';
 
 const DashboardPage: React.FC = () => {
   const { user } = useUser();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
-  // Filter data based on search query and active filter
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!user.isAuthenticated) {
+      navigate('/login');
+    }
+  }, [user.isAuthenticated, navigate]);
+  
+  // Filter data based on search query
   const filteredLands = mockLands.filter(land => 
     land.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
     land.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -27,100 +38,104 @@ const DashboardPage: React.FC = () => {
     farmer.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  const handleFilterChange = (filter: FilterType) => {
-    setActiveFilter(filter);
+  // Filter products based on selected category and search query
+  const filteredProducts = storeItems.filter(item => 
+    (selectedCategory === null || item.category === selectedCategory) &&
+    (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     item.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+  
+  const toggleMobileSidebar = () => {
+    setIsMobileSidebarOpen(!isMobileSidebarOpen);
   };
   
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Bar */}
-        <div className="mb-8">
-          <div className="relative max-w-xl mx-auto">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Sidebar Toggle Button (Mobile Only) */}
+          <div className="md:hidden">
+            <Button 
+              variant="outline" 
+              onClick={toggleMobileSidebar}
+              className="mb-4"
+            >
+              <Menu className="h-5 w-5 mr-2" /> Categories
+            </Button>
+          </div>
+          
+          {/* Store Sidebar */}
+          <div className={`md:w-1/4 lg:w-1/5 ${isMobileSidebarOpen ? 'fixed inset-0 z-50 bg-black/50' : ''}`}>
+            <div className={`md:static ${isMobileSidebarOpen ? 'fixed left-0 top-0 bottom-0 w-4/5 max-w-xs z-50 overflow-auto' : ''}`}>
+              <StoreSidebar 
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+                isMobileOpen={isMobileSidebarOpen}
+                toggleMobileSidebar={toggleMobileSidebar}
+              />
             </div>
-            <Input
-              type="text"
-              placeholder="Search by location..."
-              className="pl-10 py-6 text-lg"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
           </div>
-        </div>
-        
-        {/* Filter Tabs */}
-        <div className="mb-8">
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
-            <Button 
-              onClick={() => handleFilterChange('all')}
-              variant={activeFilter === 'all' ? 'default' : 'outline'}
-              className={activeFilter === 'all' 
-                ? 'bg-farm-green-600 text-white hover:bg-farm-green-700' 
-                : 'text-farm-green-600 border-farm-green-200 hover:bg-farm-green-50'
-              }
-            >
-              All
-            </Button>
-            <Button 
-              onClick={() => handleFilterChange('fertilizer')}
-              variant={activeFilter === 'fertilizer' ? 'default' : 'outline'}
-              className={activeFilter === 'fertilizer' 
-                ? 'bg-farm-green-600 text-white hover:bg-farm-green-700' 
-                : 'text-farm-green-600 border-farm-green-200 hover:bg-farm-green-50'
-              }
-            >
-              Fertilizer
-            </Button>
-            <Button 
-              onClick={() => handleFilterChange('seed')}
-              variant={activeFilter === 'seed' ? 'default' : 'outline'}
-              className={activeFilter === 'seed' 
-                ? 'bg-farm-green-600 text-white hover:bg-farm-green-700' 
-                : 'text-farm-green-600 border-farm-green-200 hover:bg-farm-green-50'
-              }
-            >
-              Seed
-            </Button>
-            <Button 
-              onClick={() => handleFilterChange('equipments')}
-              variant={activeFilter === 'equipments' ? 'default' : 'outline'}
-              className={activeFilter === 'equipments' 
-                ? 'bg-farm-green-600 text-white hover:bg-farm-green-700' 
-                : 'text-farm-green-600 border-farm-green-200 hover:bg-farm-green-50'
-              }
-            >
-              Equipments
-            </Button>
+          
+          {/* Main Content Area */}
+          <div className="md:w-3/4 lg:w-4/5">
+            {/* Search Bar */}
+            <div className="mb-6">
+              <div className="relative max-w-2xl mx-auto">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <Input
+                  type="text"
+                  placeholder={user.role === 'farmer' ? "Search lands by location..." : "Search products or farmers..."}
+                  className="pl-10 py-6 text-lg"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            {/* Dashboard Content */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {selectedCategory !== null || filteredProducts.length > 0 ? (
+                // Show products when a category is selected or products match search
+                filteredProducts.map(product => (
+                  <ProductCard key={product.id} product={product} />
+                ))
+              ) : (
+                // Show role-based content when no category is selected
+                user.role === 'farmer' ? (
+                  filteredLands.length > 0 ? (
+                    filteredLands.map(land => (
+                      <LandCard key={land.id} land={land} />
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-12">
+                      <p className="text-gray-500">No lands found for the selected criteria.</p>
+                    </div>
+                  )
+                ) : (
+                  filteredFarmers.length > 0 ? (
+                    filteredFarmers.map(farmer => (
+                      <FarmerCard key={farmer.id} farmer={farmer} />
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-12">
+                      <p className="text-gray-500">No farmers found for the selected criteria.</p>
+                    </div>
+                  )
+                )
+              )}
+              
+              {/* No results message */}
+              {selectedCategory !== null && filteredProducts.length === 0 && (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-gray-500">No products found in this category.</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        
-        {/* Card Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {user.role === 'farmer' ? (
-            filteredLands.length > 0 ? (
-              filteredLands.map(land => (
-                <LandCard key={land.id} land={land} />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <p className="text-gray-500">No lands found for the selected criteria.</p>
-              </div>
-            )
-          ) : (
-            filteredFarmers.length > 0 ? (
-              filteredFarmers.map(farmer => (
-                <FarmerCard key={farmer.id} farmer={farmer} />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <p className="text-gray-500">No farmers found for the selected criteria.</p>
-              </div>
-            )
-          )}
         </div>
       </main>
       

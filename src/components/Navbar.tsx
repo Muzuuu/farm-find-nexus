@@ -1,23 +1,25 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, User, X } from 'lucide-react';
-import { useUser, UserRole } from '@/contexts/UserContext';
+import { Menu, User, X, ShoppingCart } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
 import { Button } from "@/components/ui/button";
 import ProfileModal from './ProfileModal';
+import { useToast } from "@/components/ui/use-toast";
 
 const Navbar: React.FC = () => {
-  const { user, setRole, logout } = useUser();
+  const { user, logout } = useUser();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const { toast } = useToast();
   
-  const handleRoleChange = (role: UserRole) => {
-    setRole(role);
-  };
-
   const handleLogout = () => {
     logout();
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    });
     navigate('/');
   };
 
@@ -39,61 +41,39 @@ const Navbar: React.FC = () => {
             </div>
           </div>
           
-          {user.isAuthenticated && (
-            <div className="hidden md:flex items-center space-x-4">
-              <div className="flex border border-gray-300 rounded-full p-1">
-                <button
-                  onClick={() => handleRoleChange('owner')}
-                  className={`px-4 py-1 rounded-full text-sm font-medium ${
-                    user.role === 'owner'
-                      ? 'bg-farm-green-500 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  Owner
-                </button>
-                <button
-                  onClick={() => handleRoleChange('farmer')}
-                  className={`px-4 py-1 rounded-full text-sm font-medium ${
-                    user.role === 'farmer'
-                      ? 'bg-farm-green-500 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  Farmer
-                </button>
-              </div>
-              
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleProfileModal}
-                className="ml-2 flex items-center justify-center h-10 w-10 rounded-full bg-farm-green-100 text-farm-green-600 hover:bg-farm-green-200"
-              >
-                <User className="h-5 w-5" />
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={handleLogout}
-                className="ml-2 text-farm-green-600 border-farm-green-200 hover:bg-farm-green-50"
-              >
-                Logout
-              </Button>
+          <div className="flex items-center">
+            <div className="mr-4 text-farm-green-600 font-medium hidden md:block">
+              Logged in as: <span className="capitalize">{user.role}</span>
             </div>
-          )}
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative flex items-center justify-center h-10 w-10 rounded-full hover:bg-farm-green-100 text-farm-green-600"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">0</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleProfileModal}
+              className="ml-2 flex items-center justify-center h-10 w-10 rounded-full bg-farm-green-100 text-farm-green-600 hover:bg-farm-green-200"
+            >
+              <User className="h-5 w-5" />
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={handleLogout}
+              className="ml-2 text-farm-green-600 border-farm-green-200 hover:bg-farm-green-50 hidden md:inline-flex"
+            >
+              Logout
+            </Button>
+          </div>
           
           <div className="md:hidden flex items-center">
-            {user.isAuthenticated && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleProfileModal}
-                className="mr-2 flex items-center justify-center h-10 w-10 rounded-full bg-farm-green-100 text-farm-green-600"
-              >
-                <User className="h-5 w-5" />
-              </Button>
-            )}
             <button
               onClick={toggleMobileMenu}
               className="inline-flex items-center justify-center p-2 rounded-md text-farm-green-600"
@@ -109,30 +89,11 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile menu */}
-      {isMobileMenuOpen && user.isAuthenticated && (
+      {isMobileMenuOpen && (
         <div className="md:hidden bg-white pt-2 pb-3 space-y-1 shadow-lg">
           <div className="px-4 py-2">
-            <div className="flex justify-center border border-gray-300 rounded-full p-1 mb-2">
-              <button
-                onClick={() => handleRoleChange('owner')}
-                className={`px-4 py-1 rounded-full text-sm font-medium ${
-                  user.role === 'owner'
-                    ? 'bg-farm-green-500 text-white'
-                    : 'text-gray-700'
-                }`}
-              >
-                Owner
-              </button>
-              <button
-                onClick={() => handleRoleChange('farmer')}
-                className={`px-4 py-1 rounded-full text-sm font-medium ${
-                  user.role === 'farmer'
-                    ? 'bg-farm-green-500 text-white'
-                    : 'text-gray-700'
-                }`}
-              >
-                Farmer
-              </button>
+            <div className="text-farm-green-600 font-medium mb-2">
+              Logged in as: <span className="capitalize">{user.role}</span>
             </div>
             <Button 
               variant="outline" 
